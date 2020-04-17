@@ -52,7 +52,7 @@
     "subnetIpNifdb": "[concat('10.',variables('cusIp'),'.35.0/24')]",
     "subnetIpCoop": "[concat('10.',variables('cusIp'),'.36.0/24')]",
     "subnetIPinfra": "[concat('10.',variables('cusIp'),'.37.0/24')]",
-    "subnetIpSeim": "[concat('10.', variables('cusIp'),'.38.0/24')]",
+    "subnetIpSiem": "[concat('10.', variables('cusIp'),'.38.0/24')]",
     "subnetVpnTunnel": "[concat('10.250.',variables('cusIp'),'.0/24')]",
     "vnetName": "[concat('vnet','-', parameters('orgName'),'-',parameters('envType'))]",
     "cusIp": "[string(parameters('orgIP'))]",
@@ -69,7 +69,7 @@
  //         "nif-DB",
  //         "nif-coop",
  //         "nif-infrasec",
- //         "nif-seim"
+ //         "nif-Siem"
  //       ]
  //     },
       "nsgPrefix": "[concat('nwnsg-',parameters('envType'))]",
@@ -77,12 +77,12 @@
       "nsgVpn": "[concat(variables('nsgPrefix'),'-if-VPN')]",
       "nsgIfweb": "[concat(variables('nsgPrefix'),'-if-web')]",
       "nsgIfapp": "[concat(variables('nsgPrefix'),'-if-app')]",
-      "nsgnIfweb": "[concat(variables('nsgPrefix'),'-nif-web')]",
+      "nsgNifweb": "[concat(variables('nsgPrefix'),'-nif-web')]",
       "nsgNifapp": "[concat(variables('nsgPrefix'),'-nif-app')]",
       "nsgNifdb": "[concat(variables('nsgPrefix'),'-nif-DB')]",
       "nsgCoop": "[concat(variables('nsgPrefix'),'-nif-coop')]",
       "nsgInfra": "[concat(variables('nsgPrefix'),'-nif-infrasec')]",
-      "nsgSeim": "[concat(variables('nsgPrefix'),'-nif-seim')]"
+      "nsgSiem": "[concat(variables('nsgPrefix'),'-nif-Siem')]"
     },
     "resources": [
       {
@@ -327,7 +327,7 @@
       {
         "apiVersion": "2019-12-01",
         "type": "Microsoft.Network/networkSecurityGroups",
-        "name": "[variables('nsgnIfweb')]",
+        "name": "[variables('nsgNifweb')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "securityRules": [            
@@ -482,7 +482,7 @@
               "name": "AllowDbConnIn",
               "properties": {
                 "description": "Allow Web to Connct to Database",
-                "protocol": "*",
+                "protocol": "Tcp",
                 "sourcePortRange": "*",
                 "destinationPortRange": "1433",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
@@ -549,7 +549,7 @@
               "name": "AllowTcpInCoop",
               "properties": {
                 "description": "Allow traffic from vnet",
-                "protocol": "*",
+                "protocol": "Icmp",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
@@ -631,19 +631,19 @@
       {
         "apiVersion": "2019-12-01",
         "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgSeim')]",
+        "name": "[variables('nsgSiem')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "securityRules": [                        
             {
-              "name": "DenyPorchInSeim",
+              "name": "DenyPorchInSiem",
               "properties": {
                 "description": "Deny all traffic from porch",
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('subnetIpPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpSeim')]",
+                "destinationAddressPrefix": "[variables('subnetIpSiem')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -657,7 +657,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpSeim')]",
+                "destinationAddressPrefix": "[variables('subnetIpSiem')]",
                 "access": "Allow",
                 "priority": 210,
                 "direction": "Inbound"
@@ -690,12 +690,12 @@
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgVpn'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfweb'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfapp'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgnIfweb'))]",
+          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifweb'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifapp'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifdb'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgCoop'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgInfra'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgSeim'))]"
+          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgSiem'))]"
         ],
         "properties": {
           "addressSpace": {
@@ -745,7 +745,7 @@
               "properties": {
                 "addressPrefix": "[variables('subnetIpNifweb')]",
                 "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgnIfweb'))]"
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifweb'))]"
                 }
               }
             },
@@ -786,11 +786,11 @@
               }
             },
             {
-              "name": "[concat(variables('subnetPrefix'),'-nif-seim')]",
+              "name": "[concat(variables('subnetPrefix'),'-nif-Siem')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpSeim')]",
+                "addressPrefix": "[variables('subnetIpSiem')]",
                 "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgSeim'))]"
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgSiem'))]"
                 }
               }
             }
