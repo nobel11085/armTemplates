@@ -43,16 +43,16 @@
     },
     "variables": {
     "vnetIp": "[concat('10.',variables('cusIp'),'.0.0/16')]",    
-    "subnetIpPorch": "[concat('10.',variables('cusIp'),'.1.0/24')]",
-    "subnetIpVpn": "[concat('10.',variables('cusIp'),'.2.0/24')]",
+    "subnetIpIfPorch": "[concat('10.',variables('cusIp'),'.1.0/24')]",
+    "subnetIpIfVpn": "[concat('10.',variables('cusIp'),'.2.0/24')]",
     "subnetIpIfweb":"[concat('10.',variables('cusIp'),'.3.0/24')]",
     "subnetIpIfapp": "[concat('10.',variables('cusIp'),'.4.0/24')]",
     "subnetIpNifweb": "[concat('10.',variables('cusIp'),'.33.0/24')]",
     "subnetIpNifapp": "[concat('10.',variables('cusIp'),'.34.0/24')]",
     "subnetIpNifdb": "[concat('10.',variables('cusIp'),'.35.0/24')]",
-    "subnetIpCoop": "[concat('10.',variables('cusIp'),'.36.0/24')]",
-    "subnetIPinfra": "[concat('10.',variables('cusIp'),'.37.0/24')]",
-    "subnetIpSiem": "[concat('10.', variables('cusIp'),'.38.0/24')]",
+    "subnetIpNifCoop": "[concat('10.',variables('cusIp'),'.36.0/24')]",
+    "subnetIPNifInfra": "[concat('10.',variables('cusIp'),'.37.0/24')]",
+    "subnetIpNifSiem": "[concat('10.', variables('cusIp'),'.38.0/24')]",
     "subnetVpnTunnel": "[concat('10.250.',variables('cusIp'),'.0/24')]",
     "vnetName": "[concat('vnet','-', parameters('orgName'),'-',parameters('envType'))]",
     "cusIp": "[string(parameters('orgIP'))]",
@@ -100,7 +100,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "internet",
-                "destinationAddressPrefix": "[variables('subnetIpPorch')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfPorch')]",
                 "access": "Allow",
                 "priority": 410,
                 "direction": "Inbound"
@@ -124,8 +124,8 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpVpn')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -139,7 +139,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('subnetVpnTunnel')]",
-                "destinationAddressPrefix": "[variables('subnetIpVpn')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
                 "access": "Allow",
                 "priority": 110,
                 "direction": "Inbound"
@@ -153,7 +153,7 @@
                 "sourcePortRange": "22",
                 "destinationPortRange": "22",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpVpn')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
                 "access": "Allow",
                 "priority": 180,
                 "direction": "Inbound"
@@ -168,7 +168,7 @@
                 "sourcePortRange": "3389",
                 "destinationPortRange": "3389",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpVpn')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
                 "access": "Allow",
                 "priority": 190,
                 "direction": "Inbound"
@@ -182,7 +182,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpVpn')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
                 "access": "Allow",
                 "priority": 400,
                 "direction": "Inbound"
@@ -219,7 +219,7 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
                 "destinationAddressPrefix": "[variables('subnetIpIfweb')]",
                 "access": "Deny",
                 "priority": 100,
@@ -338,7 +338,7 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
                 "destinationAddressPrefix": "[variables('subnetIpNifweb')]",
                 "access": "Deny",
                 "priority": 100,
@@ -405,7 +405,7 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
                 "destinationAddressPrefix": "[variables('subnetIpNifapp')]",
                 "access": "Deny",
                 "priority": 100,
@@ -471,7 +471,7 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
                 "destinationAddressPrefix": "[variables('subnetIpNifdb')]",
                 "access": "Deny",
                 "priority": 100,
@@ -538,8 +538,8 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpCoop')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifCoop')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -553,7 +553,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpCoop')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifCoop')]",
                 "access": "Allow",
                 "priority": 210,
                 "direction": "Inbound"
@@ -590,8 +590,8 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIPinfra')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                "destinationAddressPrefix": "[variables('subnetIPNifInfra')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -605,7 +605,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIPinfra')]",
+                "destinationAddressPrefix": "[variables('subnetIPNifInfra')]",
                 "access": "Allow",
                 "priority": 210,
                 "direction": "Inbound"
@@ -642,8 +642,8 @@
                 "protocol": "*",
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpSiem')]",
+                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifSiem')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -657,7 +657,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpSiem')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifSiem')]",
                 "access": "Allow",
                 "priority": 210,
                 "direction": "Inbound"
@@ -707,7 +707,7 @@
             {
               "name": "[concat(variables('subnetPrefix'),'-if-porch')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpPorch')]",
+                "addressPrefix": "[variables('subnetIpIfPorch')]",
                 "networkSecurityGroup": {
                   "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgPorch'))]"
                 }
@@ -716,7 +716,7 @@
             {
               "name": "[concat(variables('subnetPrefix'),'-if-VPN')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpVpn')]",
+                "addressPrefix": "[variables('subnetIpIfVpn')]",
                 "networkSecurityGroup": {
                   "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgVpn'))]"
                 }
@@ -770,7 +770,7 @@
             {
               "name": "[concat(variables('subnetPrefix'),'-nif-coop')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpCoop')]",
+                "addressPrefix": "[variables('subnetIpNifCoop')]",
                 "networkSecurityGroup": {
                   "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgCoop'))]"
                 }
@@ -779,7 +779,7 @@
             {
               "name": "[concat(variables('subnetPrefix'),'-nif-infrasec')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIPinfra')]",
+                "addressPrefix": "[variables('subnetIPNifInfra')]",
                 "networkSecurityGroup": {
                   "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgInfra'))]"
                 }
@@ -788,7 +788,7 @@
             {
               "name": "[concat(variables('subnetPrefix'),'-nif-Siem')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpSiem')]",
+                "addressPrefix": "[variables('subnetIpNifSiem')]",
                 "networkSecurityGroup": {
                   "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgSiem'))]"
                 }
