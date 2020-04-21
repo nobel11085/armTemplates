@@ -45,11 +45,11 @@
     "vnetIp": "[concat('10.',variables('cusIp'),'.0.0/16')]",    
     "subnetIpIfPorch": "[concat('10.',variables('cusIp'),'.1.0/24')]",
     "subnetIpIfVpn": "[concat('10.',variables('cusIp'),'.2.0/24')]",
-    "subnetIpIfweb":"[concat('10.',variables('cusIp'),'.3.0/24')]",
-    "subnetIpIfapp": "[concat('10.',variables('cusIp'),'.4.0/24')]",
-    "subnetIpNifweb": "[concat('10.',variables('cusIp'),'.33.0/24')]",
-    "subnetIpNifapp": "[concat('10.',variables('cusIp'),'.34.0/24')]",
-    "subnetIpNifdb": "[concat('10.',variables('cusIp'),'.35.0/24')]",
+    "subnetIpIfWeb":"[concat('10.',variables('cusIp'),'.3.0/24')]",
+    "subnetIpIfApp": "[concat('10.',variables('cusIp'),'.4.0/24')]",
+    "subnetIpNifWeb": "[concat('10.',variables('cusIp'),'.33.0/24')]",
+    "subnetIpNifApp": "[concat('10.',variables('cusIp'),'.34.0/24')]",
+    "subnetIpNifDb": "[concat('10.',variables('cusIp'),'.35.0/24')]",
     "subnetIpNifCoop": "[concat('10.',variables('cusIp'),'.36.0/24')]",
     "subnetIPNifInfra": "[concat('10.',variables('cusIp'),'.37.0/24')]",
     "subnetIpNifSiem": "[concat('10.', variables('cusIp'),'.38.0/24')]",
@@ -57,32 +57,17 @@
     "vnetName": "[concat('vnet','-', parameters('orgName'),'-',parameters('envType'))]",
     "cusIp": "[string(parameters('orgIP'))]",
     "subnetPrefix": "[concat('nw-',parameters('envType'))]",      
- //   "suffixName": {
- //       "type": "array",
- //       "Value": [
- //         "if-porch",
- //         "if-VPN",
- //         "if-web",
- //         "if-app",
- //         "nif-web",
- //         "nif-app",
- //         "nif-DB",
- //         "nif-coop",
- //         "nif-infrasec",
- //         "nif-Siem"
- //       ]
- //     },
-      "nsgPrefix": "[concat('nwnsg-',parameters('envType'))]",
-      "nsgIfPorch": "[concat(variables('nsgPrefix'),'-if-porch')]",
-      "nsgIfVpn": "[concat(variables('nsgPrefix'),'-if-VPN')]",
-      "nsgIfweb": "[concat(variables('nsgPrefix'),'-if-web')]",
-      "nsgIfapp": "[concat(variables('nsgPrefix'),'-if-app')]",
-      "nsgNifweb": "[concat(variables('nsgPrefix'),'-nif-web')]",
-      "nsgNifapp": "[concat(variables('nsgPrefix'),'-nif-app')]",
-      "nsgNifdb": "[concat(variables('nsgPrefix'),'-nif-DB')]",
-      "nsgNifCoop": "[concat(variables('nsgPrefix'),'-nif-coop')]",
-      "nsgNifInfra": "[concat(variables('nsgPrefix'),'-nif-infrasec')]",
-      "nsgNifSiem": "[concat(variables('nsgPrefix'),'-nif-Siem')]"
+    "nsgPrefix": "[concat('nwnsg-',parameters('envType'))]",
+    "nsgIfPorch": "[concat(variables('nsgPrefix'),'-if-porch')]",
+    "nsgIfVpn": "[concat(variables('nsgPrefix'),'-if-VPN')]",
+    "nsgIfWeb": "[concat(variables('nsgPrefix'),'-if-web')]",
+    "nsgIfApp": "[concat(variables('nsgPrefix'),'-if-app')]",
+    "nsgNifWeb": "[concat(variables('nsgPrefix'),'-nif-web')]",
+    "nsgNifApp": "[concat(variables('nsgPrefix'),'-nif-app')]",
+    "nsgNifDb": "[concat(variables('nsgPrefix'),'-nif-DB')]",
+    "nsgNifCoop": "[concat(variables('nsgPrefix'),'-nif-coop')]",
+    "nsgNifInfra": "[concat(variables('nsgPrefix'),'-nif-infrasec')]",
+    "nsgNifSiem": "[concat(variables('nsgPrefix'),'-nif-Siem')]"
     },
     "resources": [
       {
@@ -130,21 +115,7 @@
                 "priority": 100,
                 "direction": "Inbound"
               }
-            },
-            {
-              "name": "AllowVpnTunnInVpn",
-              "properties": {
-                "description": "Allow vpn tunnel traffic in vpn",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetVpnTunnel')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
-                "access": "Allow",
-                "priority": 110,
-                "direction": "Inbound"
-              }
-            },
+            },  
             {
               "name": "AllowSshInvpn",
               "properties": {
@@ -158,8 +129,8 @@
                 "priority": 180,
                 "direction": "Inbound"
               }
-            }, 
-             
+            },
+            
             {
               "name": "AllowRdpInvpn",
               "properties": {
@@ -173,7 +144,7 @@
                 "priority": 190,
                 "direction": "Inbound"
               }
-            },            
+            },          
             {
               "name": "AllowIcmpInvpn",
               "properties": {
@@ -185,6 +156,21 @@
                 "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
                 "access": "Allow",
                 "priority": 400,
+                "direction": "Inbound"
+              }
+            },
+                         
+            {
+              "name": "AllowVpnTunnInVpn",
+              "properties": {
+                "description": "Allow vpn tunnel traffic in vpn",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefix": "[variables('subnetVpnTunnel')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
+                "access": "Allow",
+                "priority": 510,
                 "direction": "Inbound"
               }
             },            
@@ -208,7 +194,7 @@
       {
         "apiVersion": "2019-12-01",
         "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgIfweb')]",
+        "name": "[variables('nsgIfWeb')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "securityRules": [
@@ -220,7 +206,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfweb')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -234,7 +220,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfweb')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
                 "access": "Allow",
                 "priority": 400,
                 "direction": "Inbound"
@@ -248,7 +234,7 @@
                 "sourcePortRange": "80",
                 "destinationPortRange": "80",
                 "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "[variables('subnetIpIfweb')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
                 "access": "Allow",
                 "priority": 410,
                 "direction": "Inbound"
@@ -262,7 +248,7 @@
                 "sourcePortRange": "443",
                 "destinationPortRange": "443",
                 "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "[variables('subnetIpIfweb')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
                 "access": "Allow",
                 "priority": 420,
                 "direction": "Inbound"
@@ -288,7 +274,7 @@
       {
         "apiVersion": "2019-12-01",
         "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgIfapp')]",
+        "name": "[variables('nsgIfApp')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "securityRules": [
@@ -301,7 +287,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfapp')]",
+                "destinationAddressPrefix": "[variables('subnetIpIfApp')]",
                 "access": "Allow",
                 "priority": 400,
                 "direction": "Inbound"
@@ -327,7 +313,7 @@
       {
         "apiVersion": "2019-12-01",
         "type": "Microsoft.Network/networkSecurityGroups",
-        "name": "[variables('nsgNifweb')]",
+        "name": "[variables('nsgNifWeb')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "securityRules": [            
@@ -339,7 +325,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifweb')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -353,7 +339,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",            
-                "destinationAddressPrefix": "[variables('subnetIpNifweb')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
                 "access": "Allow",
                 "priority": 210,
                 "direction": "Inbound"
@@ -368,7 +354,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifweb')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
                 "access": "Allow",
                 "priority": 400,
                 "direction": "Inbound"
@@ -394,7 +380,7 @@
       {
         "apiVersion": "2019-12-01",
         "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgNifapp')]",
+        "name": "[variables('nsgNifApp')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "securityRules": [
@@ -406,7 +392,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifapp')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -420,7 +406,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifapp')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
                 "access": "Allow",
                 "priority": 210,
                 "direction": "Inbound"
@@ -434,7 +420,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifapp')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
                 "access": "Allow",
                 "priority": 400,
                 "direction": "Inbound"
@@ -460,7 +446,7 @@
       {
         "apiVersion": "2019-12-01",
         "type": "Microsoft.Network/networkSecurityGroups",
-        "name": "[variables('nsgNifdb')]",
+        "name": "[variables('nsgNifDb')]",
         "location": "[resourceGroup().location]",
         "properties": {
           "securityRules": [
@@ -472,7 +458,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifdb')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
                 "access": "Deny",
                 "priority": 100,
                 "direction": "Inbound"
@@ -486,7 +472,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "1433",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifdb')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
                 "access": "Allow",
                 "priority": 210,
                 "direction": "Inbound"
@@ -500,7 +486,7 @@
                 "sourcePortRange": "*",
                 "destinationPortRange": "*",
                 "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifdb')]",
+                "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
                 "access": "Allow",
                 "priority": 400,
                 "direction": "Inbound"
@@ -688,11 +674,11 @@
         "dependsOn": [
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfPorch'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfVpn'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfweb'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfapp'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifweb'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifapp'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifdb'))]",
+          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfWeb'))]",
+          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfApp'))]",
+          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifWeb'))]",
+          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifApp'))]",
+          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifDb'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifCoop'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifInfra'))]",
           "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifSiem'))]"
@@ -725,45 +711,45 @@
             {
               "name": "[concat(variables('subnetPrefix'),'-if-web')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpIfweb')]",
+                "addressPrefix": "[variables('subnetIpIfWeb')]",
                 "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfweb'))]"
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfWeb'))]"
                 }
               }
             },
             {
               "name": "[concat(variables('subnetPrefix'),'-if-app')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpIfapp')]",
+                "addressPrefix": "[variables('subnetIpIfApp')]",
                 "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfapp'))]"
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfApp'))]"
                 }
               }
             },
             {
               "name": "[concat(variables('subnetPrefix'),'-nif-web')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpNifweb')]",
+                "addressPrefix": "[variables('subnetIpNifWeb')]",
                 "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifweb'))]"
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifWeb'))]"
                 }
               }
             },
             {
               "name": "[concat(variables('subnetPrefix'),'-nif-app')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpNifapp')]",
+                "addressPrefix": "[variables('subnetIpNifApp')]",
                 "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifapp'))]"
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifApp'))]"
                 }
               }
             },
             {
               "name": "[concat(variables('subnetPrefix'),'-nif-DB')]",
               "properties": {
-                "addressPrefix": "[variables('subnetIpNifdb')]",
+                "addressPrefix": "[variables('subnetIpNifDb')]",
                 "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifdb'))]"
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifDb'))]"
                 }
               }
             },
