@@ -1,787 +1,814 @@
-{
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "orgName": {
-        "type": "string",
-        "defaultValue": "txo",
-        "minLength": 2,
-        "maxLength": 5,
-        "metadata": {
-          "description": "A two to five character abbreviation of the organization/person using the vnet. "
+  {
+      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "orgName": {
+          "type": "string",
+          "defaultValue": "txo",
+          "minLength": 2,
+          "maxLength": 5,
+          "metadata": {
+            "description": "A two to five character abbreviation of the organization/person using the vnet. "
+          }
+        },
+        "envType": {
+          "type": "string",
+          "defaultValue": "test",
+          "allowedValues": [
+            "prod",
+            "test",
+            "dev",
+            "stage",
+            "edu"
+          ],
+          "metadata": {
+            "description": "Type of environment for the Vnet: test, prod, dev, stage,edu"
+          }
+        },
+        "orgIP": {
+          "type": "int",
+          "minValue": 0,
+          "maxValue": 250,
+          "metadata":{
+              "description":"IP assigned for the client"
+          }
+        },
+        "location": {
+          "type": "string",
+          "defaultValue": "[resourceGroup().location]",
+          "metadata": {
+            "description": "Location for all resources."
+          }
         }
       },
-      "envType": {
-        "type": "string",
-        "defaultValue": "test",
-        "allowedValues": [
-          "prod",
-          "test",
-          "dev",
-          "stage",
-          "edu"
-        ],
-        "metadata": {
-          "description": "Type of environment for the Vnet: test, prod, dev, stage,edu"
-        }
+      "variables": {
+      "vnetIp": "[concat('10.',variables('cusIp'),'.0.0/16')]",    
+      "subnetIpIfPorch": "[concat('10.',variables('cusIp'),'.1.0/24')]",
+      "subnetIpIfVpn": "[concat('10.',variables('cusIp'),'.2.0/24')]",
+      "subnetIpIfWeb":"[concat('10.',variables('cusIp'),'.3.0/24')]",
+      "subnetIpIfApp": "[concat('10.',variables('cusIp'),'.4.0/24')]",
+      "subnetIpNifWeb": "[concat('10.',variables('cusIp'),'.33.0/24')]",
+      "subnetIpNifApp": "[concat('10.',variables('cusIp'),'.34.0/24')]",
+      "subnetIpNifDb": "[concat('10.',variables('cusIp'),'.35.0/24')]",
+      "subnetIpNifCoop": "[concat('10.',variables('cusIp'),'.36.0/24')]",
+      "subnetIpNifInfra": "[concat('10.',variables('cusIp'),'.37.0/24')]",
+      "subnetIpNifSiem": "[concat('10.', variables('cusIp'),'.38.0/24')]",
+      "subnetVpnTunnel": "[concat('10.250.',variables('cusIp'),'.0/24')]",
+      "vnetName": "[concat('vnet','-', parameters('orgName'),'-',parameters('envType'))]",
+      "cusIp": "[string(parameters('orgIP'))]",
+      "subnetPrefix": "[concat('nw-',parameters('envType'))]",      
+      "nsgPrefix": "[concat('nwnsg-',parameters('envType'))]",
+      "nsgIfPorch": "[concat(variables('nsgPrefix'),'-if-porch')]",
+      "nsgIfVpn": "[concat(variables('nsgPrefix'),'-if-vpn')]",
+      "nsgIfWeb": "[concat(variables('nsgPrefix'),'-if-web')]",
+      "nsgIfApp": "[concat(variables('nsgPrefix'),'-if-app')]",
+      "nsgNifWeb": "[concat(variables('nsgPrefix'),'-nif-web')]",
+      "nsgNifApp": "[concat(variables('nsgPrefix'),'-nif-app')]",
+      "nsgNifDb": "[concat(variables('nsgPrefix'),'-nif-db')]",
+      "nsgNifCoop": "[concat(variables('nsgPrefix'),'-nif-coop')]",
+      "nsgNifInfra": "[concat(variables('nsgPrefix'),'-nif-infrasec')]",
+      "nsgNifSiem": "[concat(variables('nsgPrefix'),'-nif-siem')]"
       },
-      "orgIP": {
-        "type": "int",
-        "minValue": 0,
-        "maxValue": 250,
-        "metadata":{
-            "description":"IP assigned for the client"
-        }
-      },
-      "location": {
-        "type": "string",
-        "defaultValue": "[resourceGroup().location]",
-        "metadata": {
-          "description": "Location for all resources."
-        }
-      }
-    },
-    "variables": {
-    "vnetIp": "[concat('10.',variables('cusIp'),'.0.0/16')]",    
-    "subnetIpIfPorch": "[concat('10.',variables('cusIp'),'.1.0/24')]",
-    "subnetIpIfVpn": "[concat('10.',variables('cusIp'),'.2.0/24')]",
-    "subnetIpIfWeb":"[concat('10.',variables('cusIp'),'.3.0/24')]",
-    "subnetIpIfApp": "[concat('10.',variables('cusIp'),'.4.0/24')]",
-    "subnetIpNifWeb": "[concat('10.',variables('cusIp'),'.33.0/24')]",
-    "subnetIpNifApp": "[concat('10.',variables('cusIp'),'.34.0/24')]",
-    "subnetIpNifDb": "[concat('10.',variables('cusIp'),'.35.0/24')]",
-    "subnetIpNifCoop": "[concat('10.',variables('cusIp'),'.36.0/24')]",
-    "subnetIPNifInfra": "[concat('10.',variables('cusIp'),'.37.0/24')]",
-    "subnetIpNifSiem": "[concat('10.', variables('cusIp'),'.38.0/24')]",
-    "subnetVpnTunnel": "[concat('10.250.',variables('cusIp'),'.0/24')]",
-    "vnetName": "[concat('vnet','-', parameters('orgName'),'-',parameters('envType'))]",
-    "cusIp": "[string(parameters('orgIP'))]",
-    "subnetPrefix": "[concat('nw-',parameters('envType'))]",      
-    "nsgPrefix": "[concat('nwnsg-',parameters('envType'))]",
-    "nsgIfPorch": "[concat(variables('nsgPrefix'),'-if-porch')]",
-    "nsgIfVpn": "[concat(variables('nsgPrefix'),'-if-VPN')]",
-    "nsgIfWeb": "[concat(variables('nsgPrefix'),'-if-web')]",
-    "nsgIfApp": "[concat(variables('nsgPrefix'),'-if-app')]",
-    "nsgNifWeb": "[concat(variables('nsgPrefix'),'-nif-web')]",
-    "nsgNifApp": "[concat(variables('nsgPrefix'),'-nif-app')]",
-    "nsgNifDb": "[concat(variables('nsgPrefix'),'-nif-DB')]",
-    "nsgNifCoop": "[concat(variables('nsgPrefix'),'-nif-coop')]",
-    "nsgNifInfra": "[concat(variables('nsgPrefix'),'-nif-infrasec')]",
-    "nsgNifSiem": "[concat(variables('nsgPrefix'),'-nif-Siem')]"
-    },
-    "resources": [
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgIfPorch')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-            {                
-              "name": "AllowInternetInPorch",
-              "properties": {
-                "description": "Allow All traffic internet to porch",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "internet",
-                "destinationAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "access": "Allow",
-                "priority": 410,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgIfVpn')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [         
-            
-            {
-              "name": "DenyPorchInVpn",
-              "properties": {
-                "description": "Deny all traffic from porch to vpn",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },  
-            {
-              "name": "AllowSshInvpn",
-              "properties": {
-                "description": "Allow ssh traffic to vpn",
-                "protocol": "Tcp",
-                "sourcePortRange": "22",
-                "destinationPortRange": "22",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
-                "access": "Allow",
-                "priority": 180,
-                "direction": "Inbound"
-              }
-            },
-            
-            {
-              "name": "AllowRdpInvpn",
-              "properties": {
-                "description": "Allow rdp traffic to vpn",
-                "protocol": "Tcp",
-                "sourcePortRange": "3389",
-                "destinationPortRange": "3389",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
-                "access": "Allow",
-                "priority": 190,
-                "direction": "Inbound"
-              }
-            },          
-            {
-              "name": "AllowIcmpInvpn",
-              "properties": {
-                "description": "Allow Icmp to vpn from Vnet",
-                "protocol": "Icmp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
-                "access": "Allow",
-                "priority": 400,
-                "direction": "Inbound"
-              }
-            },
-                         
-            {
-              "name": "AllowVpnTunnInVpn",
-              "properties": {
-                "description": "Allow vpn tunnel traffic in vpn",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetVpnTunnel')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
-                "access": "Allow",
-                "priority": 510,
-                "direction": "Inbound"
-              }
-            },            
-            {
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny all other traffic in VPN Nw",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgIfWeb')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-            {
-              "name": "DenyPorchInIfweb",
-              "properties": {
-                "description": "Deny all from Porch to Ifweb",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowIcmpIn",
-              "properties": {
-                "description": "Allow Icmp from Vnet",
-                "protocol": "Icmp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
-                "access": "Allow",
-                "priority": 400,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowHttpInIfweb",
-              "properties": {
-                "description": "Allow tcp port 80",
-                "protocol": "Tcp",
-                "sourcePortRange": "80",
-                "destinationPortRange": "80",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
-                "access": "Allow",
-                "priority": 410,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowHttpsInifweb",
-              "properties": {
-                "description": "Allow tcp port 443",
-                "protocol": "Tcp",
-                "sourcePortRange": "443",
-                "destinationPortRange": "443",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
-                "access": "Allow",
-                "priority": 420,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgIfApp')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-                        
-            {
-              "name": "AllowIcmpIn",
-              "properties": {
-                "description": "Allow Icmp from Vnet",
-                "protocol": "Icmp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpIfApp')]",
-                "access": "Allow",
-                "priority": 400,
-                "direction": "Inbound"
-              }
-            },
+      "resources": [
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgIfPorch')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [
               {                
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
+                "name": "AllowInternetInPorch",
+                "properties": {
+                  "description": "Allow All traffic from internet to porch",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "internet",
+                  "destinationAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "access": "Allow",
+                  "priority": 410,
+                  "direction": "Inbound"
+                }
               }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/networkSecurityGroups",
-        "name": "[variables('nsgNifWeb')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [            
-            {
-              "name": "DenyPorchInNifweb",
-              "properties": {
-                "description": "Deny porch traffic in nif-web",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowTcpInNifweb",
-              "properties": {
-                "description": "Allow Tcp from vnet",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",            
-                "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
-                "access": "Allow",
-                "priority": 210,
-                "direction": "Inbound"
-              }
-            },
-                        
-            {
-              "name": "AllowIcmpIn",
-              "properties": {
-                "description": "Allow Icmp from Vnet",
-                "protocol": "Icmp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
-                "access": "Allow",
-                "priority": 400,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgNifApp')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-            {
-              "name": "DenyPorchInNifapp",
-              "properties": {
-                "description": "Deny all traffic from porch",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowTcpInNifapp",
-              "properties": {
-                "description": "Allow all traffic from vnet",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
-                "access": "Allow",
-                "priority": 210,
-                "direction": "Inbound"
-              }
-            },                        
-            {
-              "name": "AllowIcmpIn",
-              "properties": {
-                "description": "Allow Icmp from Vnet",
-                "protocol": "Icmp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
-                "access": "Allow",
-                "priority": 400,
-                "direction": "Inbound"
-              }
-            }, 
-            {
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/networkSecurityGroups",
-        "name": "[variables('nsgNifDb')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-            {
-              "name": "DenyPorchInnifdb",
-              "properties": {
-                "description": "Deny all traffic from porch",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowDbConnIn",
-              "properties": {
-                "description": "Allow Web to Connct to Database",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "1433",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
-                "access": "Allow",
-                "priority": 210,
-                "direction": "Inbound"
-              }
-            },                        
-            {
-              "name": "AllowIcmpIn",
-              "properties": {
-                "description": "Allow Icmp from Vnet",
-                "protocol": "Icmp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
-                "access": "Allow",
-                "priority": 400,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-  
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgNifCoop')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-            {
-              "name": "DenyPorchInCoop",
-              "properties": {
-                "description": "Deny all traffic from porch",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifCoop')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowTcpInCoop",
-              "properties": {
-                "description": "Allow traffic from vnet",
-                "protocol": "Icmp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifCoop')]",
-                "access": "Allow",
-                "priority": 210,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgNifInfra')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-            {
-              "name": "DenyPorchInInfra",
-              "properties": {
-                "description": "Deny all traffic from porch",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIPNifInfra')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowVnetIn",
-              "properties": {
-                "description": "Allow all from vnet",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIPNifInfra')]",
-                "access": "Allow",
-                "priority": 210,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "DenyAllport",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "apiVersion": "2019-12-01",
-        "type": "Microsoft.Network/NetworkSecurityGroups",
-        "name": "[variables('nsgNifSiem')]",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [                        
-            {
-              "name": "DenyPorchInSiem",
-              "properties": {
-                "description": "Deny all traffic from porch",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifSiem')]",
-                "access": "Deny",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "AllowVnetIn",
-              "properties": {
-                "description": "Allow traffic from vnet for monitoring/Log",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "[variables('vnetIp')]",
-                "destinationAddressPrefix": "[variables('subnetIpNifSiem')]",
-                "access": "Allow",
-                "priority": 210,
-                "direction": "Inbound"
-              }
-            },
-            {
-              "name": "DenyAllInPort",
-              "properties": {
-                "description": "Deny All port",
-                "protocol": "*",
-                "sourcePortRange": "*",
-                "destinationPortRange": "*",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Deny",
-                "priority": 1000,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "type": "Microsoft.Network/virtualNetworks",
-        "apiVersion": "2019-12-01",
-        "name": "[variables('vnetName')]",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfPorch'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfVpn'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfWeb'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfApp'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifWeb'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifApp'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifDb'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifCoop'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifInfra'))]",
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifSiem'))]"
-        ],
-        "properties": {
-          "addressSpace": {
-            "addressPrefixes": [
-              "[variables('vnetIp')]"
             ]
-          },
-          "subnets": [
-            {
-              "name": "[concat(variables('subnetPrefix'),'-if-porch')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpIfPorch')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfPorch'))]"
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgIfVpn')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [         
+              
+              {
+                "name": "DenyPorchInVpn",
+                "properties": {
+                  "description": "Deny all traffic from porch to if-vpn",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },  
+              {
+                "name": "AllowSshInVpn",
+                "properties": {
+                  "description": "Allow ssh traffic to vpn",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "22",
+                  "destinationPortRange": "22",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
+                  "access": "Allow",
+                  "priority": 180,
+                  "direction": "Inbound"
+                }
+              },
+              
+              {
+                "name": "AllowRdpInVpn",
+                "properties": {
+                  "description": "Allow rdp traffic to vpn",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "3389",
+                  "destinationPortRange": "3389",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
+                  "access": "Allow",
+                  "priority": 190,
+                  "direction": "Inbound"
+                }
+              },          
+              {
+                "name": "AllowIcmpInVpn",
+                "properties": {
+                  "description": "Allow Icmp to vpn from Vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfVpn')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              },
+                          
+              {
+                "name": "AllowVpnTunnInVpn",
+                "properties": {
+                  "description": "Allow vpn tunnel traffic in Vnet",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetVpnTunnel')]",
+                  "destinationAddressPrefix": "[variables('vnetIp')]",
+                  "access": "Allow",
+                  "priority": 510,
+                  "direction": "Inbound"
+                }
+              },            
+              {
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny all other traffic in VPN network",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
                 }
               }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgIfWeb')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [
+              {
+                "name": "DenyPorchInIfweb",
+                "properties": {
+                  "description": "Deny all traffic from Porch to If-web",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowIcmpIn",
+                "properties": {
+                  "description": "Allow Icmp from Vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowHttpInIfweb",
+                "properties": {
+                  "description": "Allow tcp port 80",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "80",
+                  "destinationPortRange": "80",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
+                  "access": "Allow",
+                  "priority": 410,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowHttpsInIfweb",
+                "properties": {
+                  "description": "Allow tcp port 443",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "443",
+                  "destinationPortRange": "443",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "[variables('subnetIpIfWeb')]",
+                  "access": "Allow",
+                  "priority": 420,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgIfApp')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [                        
+              {
+                "name": "AllowIcmpIn",
+                "properties": {
+                  "description": "Allow Icmp from Vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfApp')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              },
+                {                
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/networkSecurityGroups",
+          "name": "[variables('nsgNifWeb')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [            
+              {
+                "name": "DenyPorchInNifweb",
+                "properties": {
+                  "description": "Deny porch traffic in nif-web",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },                        
+              {
+                "name": "AllowIcmpIn",
+                "properties": {
+                  "description": "Allow Icmp from Vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              },
+
+              {
+                "name": "AllowHttpInNifweb",
+                "properties": {
+                  "description": "Allow http from vnet",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "80",
+                  "destinationPortRange": "80",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",            
+                  "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
+                  "access": "Allow",
+                  "priority": 410,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowHttpsInNifweb",
+                "properties": {
+                  "description": "Allow Https from vnet",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "443",
+                  "destinationPortRange": "443",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",            
+                  "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
+                  "access": "Allow",
+                  "priority": 420,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgNifApp')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [
+              {
+                "name": "DenyPorchInNifapp",
+                "properties": {
+                  "description": "Deny all traffic from porch",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowTcpInNifapp",
+                "properties": {
+                  "description": "Allow all tcp traffic from vnet",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
+                  "access": "Allow",
+                  "priority": 210,
+                  "direction": "Inbound"
+                }
+              },                        
+              {
+                "name": "AllowIcmpIn",
+                "properties": {
+                  "description": "Allow Icmp from Vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifApp')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              }, 
+              {
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/networkSecurityGroups",
+          "name": "[variables('nsgNifDb')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [
+              {
+                "name": "DenyPorchInnifdb",
+                "properties": {
+                  "description": "Deny all traffic from porch",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowSqlInDb",
+                "properties": {
+                  "description": "Allow connetion to Sql database server",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "1433",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
+                  "access": "Allow",
+                  "priority": 210,
+                  "direction": "Inbound"
+                }
+              },                        
+              {
+                "name": "AllowIcmpIn",
+                "properties": {
+                  "description": "Allow Icmp from Vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifDb')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+    
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgNifCoop')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [
+              {
+                "name": "DenyPorchInCoop",
+                "properties": {
+                  "description": "Deny all traffic from porch",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifCoop')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowIcmpInCoop",
+                "properties": {
+                  "description": "Allow traffic from vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifCoop')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgNifInfra')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [
+              {
+                "name": "DenyPorchInInfra",
+                "properties": {
+                  "description": "Deny all traffic from porch",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifInfra')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowTcpIn",
+                "properties": {
+                  "description": "Allow all tcp traffic from vnet",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifInfra')]",
+                  "access": "Allow",
+                  "priority": 210,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowIcmpInInfra",
+                "properties": {
+                  "description": "Allow traffic from vnet",
+                  "protocol": "Icmp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifInfra')]",
+                  "access": "Allow",
+                  "priority": 400,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "DenyAllport",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2019-12-01",
+          "type": "Microsoft.Network/NetworkSecurityGroups",
+          "name": "[variables('nsgNifSiem')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "securityRules": [                        
+              {
+                "name": "DenyPorchInSiem",
+                "properties": {
+                  "description": "Deny all traffic from porch",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifSiem')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "AllowTcpIn",
+                "properties": {
+                  "description": "Allow tcp traffic from vnet for monitoring/Log",
+                  "protocol": "Tcp",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
+                  "destinationAddressPrefix": "[variables('subnetIpNifSiem')]",
+                  "access": "Allow",
+                  "priority": 210,
+                  "direction": "Inbound"
+                }
+              },
+              {
+                "name": "DenyAllInPort",
+                "properties": {
+                  "description": "Deny All port",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Deny",
+                  "priority": 1000,
+                  "direction": "Inbound"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "Microsoft.Network/virtualNetworks",
+          "apiVersion": "2019-12-01",
+          "name": "[variables('vnetName')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfPorch'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfVpn'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfWeb'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgIfApp'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifWeb'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifApp'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifDb'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifCoop'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifInfra'))]",
+            "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgNifSiem'))]"
+          ],
+          "properties": {
+            "addressSpace": {
+              "addressPrefixes": [
+                "[variables('vnetIp')]"
+              ]
             },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-if-VPN')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpIfVpn')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfVpn'))]"
+            "subnets": [
+              {
+                "name": "[concat(variables('subnetPrefix'),'-if-porch')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpIfPorch')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfPorch'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-if-vpn')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpIfVpn')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfVpn'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-if-web')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpIfWeb')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfWeb'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-if-app')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpIfApp')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfApp'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-nif-web')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpNifWeb')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifWeb'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-nif-app')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpNifApp')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifApp'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-nif-db')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpNifDb')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifDb'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-nif-coop')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpNifCoop')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifCoop'))]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(variables('subnetPrefix'),'-nif-infrasec')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpNifInfra')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifInfra'))]"
+                  }
+                }
+              },
+              { 
+                "name": "[concat(variables('subnetPrefix'),'-nif-siem')]",
+                "properties": {
+                  "addressPrefix": "[variables('subnetIpNifSiem')]",
+                  "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifSiem'))]"
+                  }
                 }
               }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-if-web')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpIfWeb')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfWeb'))]"
-                }
-              }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-if-app')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpIfApp')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgIfApp'))]"
-                }
-              }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-nif-web')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpNifWeb')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifWeb'))]"
-                }
-              }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-nif-app')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpNifApp')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifApp'))]"
-                }
-              }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-nif-DB')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpNifDb')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifDb'))]"
-                }
-              }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-nif-coop')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpNifCoop')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifCoop'))]"
-                }
-              }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-nif-infrasec')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIPNifInfra')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifInfra'))]"
-                }
-              }
-            },
-            {
-              "name": "[concat(variables('subnetPrefix'),'-nif-Siem')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetIpNifSiem')]",
-                "networkSecurityGroup": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNifSiem'))]"
-                }
-              }
-            }
-          ]
+            ]
+          }
         }
-      }
-    ]
-  }
+      ]
+    }

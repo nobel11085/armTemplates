@@ -1,0 +1,15 @@
+---
+- hosts: win
+  vars:
+    ntp_sever: ntp.se
+  task:
+  - name: Start NTP Service (w32time)
+    win_commad: w32tm /config /manulpeeringlist:"{{ ntp_server }}" /reliable:yes /update
+    changed_when: flase
+  handlers:
+  - name: be sure ntpd is running and enable
+    win_service:
+      name: w32time
+      state: restarted
+      enable: yes
+    tags: ntp 
