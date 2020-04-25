@@ -25,7 +25,7 @@
             "description": "Type of environment for the Vnet: test, prod, dev, stage,edu"
           }
         },
-        "orgIP": {
+        "orgIp": {
           "type": "int",
           "minValue": 0,
           "maxValue": 250,
@@ -42,7 +42,7 @@
         }
       },
       "variables": {
-      "vnetIp": "[concat('10.',variables('cusIp'),'.0.0/16')]",    
+      "vnetIp": "[concat('10.',variables('cusIp'),'.0.0/16')]",
       "subnetIpIfPorch": "[concat('10.',variables('cusIp'),'.1.0/24')]",
       "subnetIpIfVpn": "[concat('10.',variables('cusIp'),'.2.0/24')]",
       "subnetIpIfWeb":"[concat('10.',variables('cusIp'),'.3.0/24')]",
@@ -55,8 +55,8 @@
       "subnetIpNifSiem": "[concat('10.', variables('cusIp'),'.38.0/24')]",
       "subnetVpnTunnel": "[concat('10.250.',variables('cusIp'),'.0/24')]",
       "vnetName": "[concat('vnet','-', parameters('orgName'),'-',parameters('envType'))]",
-      "cusIp": "[string(parameters('orgIP'))]",
-      "subnetPrefix": "[concat('nw-',parameters('envType'))]",      
+      "cusIp": "[string(parameters('orgIp'))]",
+      "subnetPrefix": "[concat('nw-',parameters('envType'))]",
       "nsgPrefix": "[concat('nwnsg-',parameters('envType'))]",
       "nsgIfPorch": "[concat(variables('nsgPrefix'),'-if-porch')]",
       "nsgIfVpn": "[concat(variables('nsgPrefix'),'-if-vpn')]",
@@ -77,8 +77,8 @@
           "location": "[resourceGroup().location]",
           "properties": {
             "securityRules": [
-              {                
-                "name": "AllowInternetInPorch",
+              {
+                "name": "AllowInternetInIfPorch",
                 "properties": {
                   "description": "Allow All traffic from internet to porch",
                   "protocol": "*",
@@ -100,8 +100,8 @@
           "name": "[variables('nsgIfVpn')]",
           "location": "[resourceGroup().location]",
           "properties": {
-            "securityRules": [         
-              
+            "securityRules": [
+
               {
                 "name": "DenyPorchInVpn",
                 "properties": {
@@ -115,7 +115,7 @@
                   "priority": 100,
                   "direction": "Inbound"
                 }
-              },  
+              },
               {
                 "name": "AllowSshInVpn",
                 "properties": {
@@ -130,7 +130,7 @@
                   "direction": "Inbound"
                 }
               },
-              
+
               {
                 "name": "AllowRdpInVpn",
                 "properties": {
@@ -144,7 +144,7 @@
                   "priority": 190,
                   "direction": "Inbound"
                 }
-              },          
+              },
               {
                 "name": "AllowIcmpInVpn",
                 "properties": {
@@ -159,7 +159,7 @@
                   "direction": "Inbound"
                 }
               },
-                          
+
               {
                 "name": "AllowVpnTunnInVpn",
                 "properties": {
@@ -173,7 +173,7 @@
                   "priority": 510,
                   "direction": "Inbound"
                 }
-              },            
+              },
               {
                 "name": "DenyAllport",
                 "properties": {
@@ -277,7 +277,21 @@
           "name": "[variables('nsgIfApp')]",
           "location": "[resourceGroup().location]",
           "properties": {
-            "securityRules": [                        
+            "securityRules": [
+              {
+                "name": "DenyPorchInIfApp",
+                "properties": {
+                  "description": "Deny all traffic from Porch to If-app",
+                  "protocol": "*",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "*",
+                  "sourceAddressPrefix": "[variables('subnetIpIfPorch')]",
+                  "destinationAddressPrefix": "[variables('subnetIpIfApp')]",
+                  "access": "Deny",
+                  "priority": 100,
+                  "direction": "Inbound"
+                }
+              },
               {
                 "name": "AllowIcmpIn",
                 "properties": {
@@ -292,7 +306,7 @@
                   "direction": "Inbound"
                 }
               },
-                {                
+                {
                 "name": "DenyAllport",
                 "properties": {
                   "description": "Deny All port",
@@ -315,7 +329,7 @@
           "name": "[variables('nsgNifWeb')]",
           "location": "[resourceGroup().location]",
           "properties": {
-            "securityRules": [            
+            "securityRules": [
               {
                 "name": "DenyPorchInNifweb",
                 "properties": {
@@ -329,7 +343,7 @@
                   "priority": 100,
                   "direction": "Inbound"
                 }
-              },                        
+              },
               {
                 "name": "AllowIcmpIn",
                 "properties": {
@@ -352,7 +366,7 @@
                   "protocol": "Tcp",
                   "sourcePortRange": "80",
                   "destinationPortRange": "80",
-                  "sourceAddressPrefix": "[variables('vnetIp')]",            
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
                   "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
                   "access": "Allow",
                   "priority": 410,
@@ -366,7 +380,7 @@
                   "protocol": "Tcp",
                   "sourcePortRange": "443",
                   "destinationPortRange": "443",
-                  "sourceAddressPrefix": "[variables('vnetIp')]",            
+                  "sourceAddressPrefix": "[variables('vnetIp')]",
                   "destinationAddressPrefix": "[variables('subnetIpNifWeb')]",
                   "access": "Allow",
                   "priority": 420,
@@ -424,7 +438,7 @@
                   "priority": 210,
                   "direction": "Inbound"
                 }
-              },                        
+              },
               {
                 "name": "AllowIcmpIn",
                 "properties": {
@@ -438,7 +452,7 @@
                   "priority": 400,
                   "direction": "Inbound"
                 }
-              }, 
+              },
               {
                 "name": "DenyAllport",
                 "properties": {
@@ -490,7 +504,7 @@
                   "priority": 210,
                   "direction": "Inbound"
                 }
-              },                        
+              },
               {
                 "name": "AllowIcmpIn",
                 "properties": {
@@ -518,7 +532,7 @@
                   "priority": 1000,
                   "direction": "Inbound"
                 }
-    
+
               }
             ]
           }
@@ -647,7 +661,7 @@
           "name": "[variables('nsgNifSiem')]",
           "location": "[resourceGroup().location]",
           "properties": {
-            "securityRules": [                        
+            "securityRules": [
               {
                 "name": "DenyPorchInSiem",
                 "properties": {
@@ -798,7 +812,7 @@
                   }
                 }
               },
-              { 
+              {
                 "name": "[concat(variables('subnetPrefix'),'-nif-siem')]",
                 "properties": {
                   "addressPrefix": "[variables('subnetIpNifSiem')]",
